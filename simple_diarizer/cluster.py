@@ -77,7 +77,7 @@ def cluster_SC(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwar
     else:
         cluster_model = SpectralClustering(
             n_clusters=n_clusters, affinity="nearest_neighbors",
-            eigen_solver="lobpcg",
+            eigen_solver="lobpcg", assign_labels='cluster_qr'
         )
 
         return cluster_model.fit_predict(embeds)
