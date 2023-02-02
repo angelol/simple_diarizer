@@ -82,6 +82,34 @@ def cluster_SC(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwar
 
         return cluster_model.fit_predict(S)
 
+def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwargs):
+    """
+    Cluster embeds using K-Means
+    """
+    if n_clusters is None:
+        assert threshold, "If num_clusters is not defined, threshold must be defined"
+
+    S = compute_affinity_matrix(embeds)
+    if enhance_sim:
+        S = sim_enhancement(S)
+
+    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+
+    # Get spectral embeddings.
+    spectral_embeddings = eigenvectors[:, :n_clusters]
+
+    # Run K-Means++ on spectral embeddings.
+    # Note: The correct way should be using a K-Means implementation
+    # that supports customized distance measure such as cosine distance.
+    # This implemention from scikit-learn does NOT, which is inconsistent
+    # with the paper.
+    kmeans_clusterer = KMeans(
+        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0
+    )
+    labels = kmeans_clusterer.fit_predict(spectral_embeddings)
+    return labels
+    
+
 
 def diagonal_fill(A):
     """

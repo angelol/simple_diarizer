@@ -9,7 +9,7 @@ import torchaudio
 from speechbrain.pretrained import EncoderClassifier
 from tqdm.autonotebook import tqdm
 
-from .cluster import cluster_AHC, cluster_SC
+from .cluster import cluster_AHC, cluster_SC, cluster_KMEANS
 from .utils import check_wav_16khz_mono, convert_wavfile
 
 
@@ -25,12 +25,15 @@ class Diarizer:
         assert cluster_method in [
             "ahc",
             "sc",
-        ], "Only ahc and sc in the supported clustering options"
+            "kmeans",
+        ], "Only ahc, sc and kmeans in the supported clustering options"
 
         if cluster_method == "ahc":
             self.cluster = cluster_AHC
         if cluster_method == "sc":
             self.cluster = cluster_SC
+        if cluster_method == "kmeans":
+            self.cluster = cluster_KMEANS
 
         self.vad_model, self.get_speech_ts = self.setup_VAD()
 
