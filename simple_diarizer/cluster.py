@@ -89,14 +89,14 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     if n_clusters is None:
         assert threshold, "If num_clusters is not defined, threshold must be defined"
 
-    S = compute_affinity_matrix(embeds)
-    if enhance_sim:
-        S = sim_enhancement(S)
+    # S = compute_affinity_matrix(embeds)
+    # if enhance_sim:
+    #     S = sim_enhancement(S)
 
-    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+    # (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
 
-    # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :n_clusters]
+    # # Get spectral embeddings.
+    # spectral_embeddings = eigenvectors[:, :n_clusters]
 
     # Run K-Means++ on spectral embeddings.
     # Note: The correct way should be using a K-Means implementation
@@ -106,7 +106,8 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     kmeans_clusterer = MiniBatchKMeans(
         n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0, batch_size=100,
     )
-    labels = kmeans_clusterer.fit_predict(spectral_embeddings)
+    print("embeds.shape: ", embeds.shape)
+    labels = kmeans_clusterer.fit_predict(embeds)
     return labels
     
 
