@@ -52,9 +52,9 @@ def cluster_SC(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwar
     if n_clusters is None:
         assert threshold, "If num_clusters is not defined, threshold must be defined"
 
-    S = compute_affinity_matrix(embeds)
-    if enhance_sim:
-        S = sim_enhancement(S)
+    # S = compute_affinity_matrix(embeds)
+    # if enhance_sim:
+    #     S = sim_enhancement(S)
 
     if n_clusters is None:
         (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
@@ -76,11 +76,11 @@ def cluster_SC(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwar
         return labels
     else:
         cluster_model = SpectralClustering(
-            n_clusters=n_clusters, affinity="precomputed",
+            n_clusters=n_clusters, affinity="nearest_neighbors",
             eigen_solver="lobpcg",
         )
 
-        return cluster_model.fit_predict(S)
+        return cluster_model.fit_predict(embeds)
 
 def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwargs):
     """
