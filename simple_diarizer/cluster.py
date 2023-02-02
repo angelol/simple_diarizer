@@ -3,7 +3,7 @@ import numpy as np
 import scipy.cluster.hierarchy as hcluster
 from scipy.sparse.csgraph import laplacian
 from scipy.ndimage import gaussian_filter
-from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
+from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans, SpectralClustering
 from sklearn.metrics import pairwise_distances
 
 
@@ -103,8 +103,8 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     # that supports customized distance measure such as cosine distance.
     # This implemention from scikit-learn does NOT, which is inconsistent
     # with the paper.
-    kmeans_clusterer = KMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0
+    kmeans_clusterer = MiniBatchKMeans(
+        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0, batch_size=100,
     )
     labels = kmeans_clusterer.fit_predict(spectral_embeddings)
     return labels
