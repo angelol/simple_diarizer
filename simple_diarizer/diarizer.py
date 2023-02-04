@@ -38,7 +38,7 @@ class Diarizer:
         self.vad_model, self.get_speech_ts = self.setup_VAD()
 
         self.run_opts = (
-            {"device": "cuda:0"} if torch.cuda.is_available() else {"device": "cpu"}
+            {"device": "cuda"} if torch.cuda.is_available() else {"device": "cpu"}
         )
 
         if embed_model == "xvec":
