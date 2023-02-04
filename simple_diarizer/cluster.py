@@ -45,42 +45,27 @@ def cluster_AHC(embeds, n_clusters=None, threshold=None, metric="cosine", **kwar
 ##########################################
 
 
-def cluster_SC(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwargs):
+def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwargs):
     """
     Cluster embeds using Spectral Clustering
     """
     if n_clusters is None:
-        assert threshold, "If num_clusters is not defined, threshold must be defined"
-
-    # S = compute_affinity_matrix(embeds)
-    # if enhance_sim:
-    #     S = sim_enhancement(S)
-
-    if n_clusters is None:
+        S = compute_affinity_matrix(embeds)
+        print('S.shape', S.shape)
+        if enhance_sim:
+            S = sim_enhancement(S)
         (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
         # Get number of clusters.
-        k = compute_number_of_clusters(eigenvalues, 100, threshold)
+        n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
+        print('detected n_clusters', n_clusters)
 
-        # Get spectral embeddings.
-        spectral_embeddings = eigenvectors[:, :k]
+       
+    cluster_model = SpectralClustering(
+        n_clusters=n_clusters, affinity="nearest_neighbors",
+        eigen_solver="lobpcg", assign_labels='cluster_qr'
+    )
 
-        # Run K-Means++ on spectral embeddings.
-        # Note: The correct way should be using a K-Means implementation
-        # that supports customized distance measure such as cosine distance.
-        # This implemention from scikit-learn does NOT, which is inconsistent
-        # with the paper.
-        kmeans_clusterer = KMeans(
-            n_clusters=k, init="k-means++", max_iter=300, random_state=0
-        )
-        labels = kmeans_clusterer.fit_predict(spectral_embeddings)
-        return labels
-    else:
-        cluster_model = SpectralClustering(
-            n_clusters=n_clusters, affinity="nearest_neighbors",
-            eigen_solver="lobpcg", assign_labels='cluster_qr'
-        )
-
-        return cluster_model.fit_predict(embeds)
+    return cluster_model.fit_predict(embeds)
 
 def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwargs):
     """
@@ -89,14 +74,14 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     if n_clusters is None:
         assert threshold, "If num_clusters is not defined, threshold must be defined"
 
-    # S = compute_affinity_matrix(embeds)
-    # if enhance_sim:
-    #     S = sim_enhancement(S)
+    S = compute_affinity_matrix(embeds)
+    if enhance_sim:
+        S = sim_enhancement(S)
 
-    # (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
 
-    # # Get spectral embeddings.
-    # spectral_embeddings = eigenvectors[:, :n_clusters]
+    # Get spectral embeddings.
+    spectral_embeddings = eigenvectors[:, :n_clusters]
 
     # Run K-Means++ on spectral embeddings.
     # Note: The correct way should be using a K-Means implementation
@@ -106,8 +91,7 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     kmeans_clusterer = MiniBatchKMeans(
         n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0, batch_size=100,
     )
-    print("embeds.shape: ", embeds.shape)
-    labels = kmeans_clusterer.fit_predict(embeds)
+    labels = kmeans_clusterer.fit_predict(spectral_embeddings)
     return labels
     
 
@@ -215,7 +199,9 @@ def compute_sorted_eigenvectors(A):
     return w, v
 
 
-def compute_number_of_clusters(eigenvalues, max_clusters=None, stop_eigenvalue=1e-2):
+def compute_number_of_clusters(eigenvalues, max_clusters=None, stop_eigenvalue=0.01):
+    if not stop_eigenvalue:
+        stop_eigenvalue = 0.01
     """Compute number of clusters using EigenGap principle.
     Args:
         eigenvalues: sorted eigenvalues of the affinity matrix
