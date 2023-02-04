@@ -49,6 +49,7 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     """
     Cluster embeds using Spectral Clustering
     """
+    print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim}')
     if n_clusters is None:
         print('embeds.shape', embeds.shape)
         S = compute_affinity_matrix(embeds)
@@ -63,11 +64,12 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
         n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
         print('detected n_clusters', n_clusters)
 
-       
+    print('calling SpectralClustering')
     cluster_model = SpectralClustering(
         n_clusters=n_clusters, affinity="nearest_neighbors",
         eigen_solver="lobpcg", assign_labels='cluster_qr'
     )
+    print('calling fit_predict embeds.shape', embeds.shape)
 
     return cluster_model.fit_predict(embeds)
 
