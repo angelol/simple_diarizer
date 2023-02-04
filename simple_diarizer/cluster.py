@@ -7,6 +7,9 @@ from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans, Sp
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
+import torch.nn.functional as F
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def similarity_matrix(embeds, metric="cosine"):
     return pairwise_distances(embeds, metric=metric)
@@ -50,7 +53,8 @@ def compute_n_clusters(embeds):
     Compute the number of clusters
     """
     print('ohai compute_n_clusters 1')
-    S = compute_affinity_matrix(embeds)
+    torch_embeds = torch.from_numpy(embeds).to(device)
+    S = compute_affinity_matrix(torch_embeds)
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
     print('ohai compute_n_clusters 3')
@@ -106,29 +110,33 @@ def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **
     
 
 
+import torch
+import torchvision
+
 def diagonal_fill(A):
     """
-    Sets the diagonal elemnts of the matrix to the max of each row
+    Sets the diagonal elements of the matrix to the max of each row
     """
-    np.fill_diagonal(A, 0.0)
-    A[np.diag_indices(A.shape[0])] = np.max(A, axis=1)
+    A = A.clone()
+    diag_idx = torch.arange(0, A.shape[0], out=torch.LongTensor()).to(A.device)
+    A[diag_idx, diag_idx] = 0.0
+    A[diag_idx, diag_idx] = torch.max(A, dim=1).values
     return A
 
 
-def gaussian_blur(A, sigma=1.0):
+def gaussian_blur(A, sigma=1):
     """
-    Does a gaussian blur on the affinity matrix
+    Does a Gaussian blur on the affinity matrix
     """
-    return gaussian_filter(A, sigma=sigma)
+    return torchvision.transforms.functional.gaussian_blur(A.unsqueeze(0), (sigma, sigma))[0]
 
 
 def row_threshold_mult(A, p=0.95, mult=0.01):
     """
     For each row multiply elements smaller than the row's p'th percentile by mult
     """
-    percentiles = np.percentile(A, p * 100, axis=1)
-    mask = A < percentiles[:, np.newaxis]
-
+    percentiles = torch.quantile(A, p, dim=1, keepdim=True)
+    mask = A < percentiles
     A = (mask * mult * A) + (~mask * A)
     return A
 
@@ -137,21 +145,21 @@ def symmetrization(A):
     """
     Symmeterization: Y_{i,j} = max(S_{ij}, S_{ji})
     """
-    return np.maximum(A, A.T)
+    return torch.max(A, A.t())
 
 
 def diffusion(A):
     """
     Diffusion: Y <- YY^T
     """
-    return np.dot(A, A.T)
+    return torch.matmul(A, A.t())
 
 
 def row_max_norm(A):
     """
     Row-wise max normalization: S_{ij} = Y_{ij} / max_k(Y_{ik})
     """
-    maxes = np.amax(A, axis=1)
+    maxes = torch.max(A, dim=1, keepdim=True).values
     return A / maxes
 
 
@@ -169,28 +177,21 @@ def sim_enhancement(A):
     return A
 
 
+
 def compute_affinity_matrix(X):
     """Compute the affinity matrix from data.
     Note that the range of affinity is [0,1].
     Args:
-        X: numpy array of shape (n_samples, n_features)
+    X: PyTorch tensor of shape (n_samples, n_features)
     Returns:
-        affinity: numpy array of shape (n_samples, n_samples)
+    affinity: PyTorch tensor of shape (n_samples, n_samples)
     """
     # Normalize the data.
-    print('compute_affinity_matrix ohai 1')
-    l2_norms = np.linalg.norm(X, axis=1)
-    print('compute_affinity_matrix ohai 2')
+    l2_norms = torch.norm(X, dim=1)
     X_normalized = X / l2_norms[:, None]
-    print('compute_affinity_matrix ohai 3')
     # Compute cosine similarities. Range is [-1,1].
-    # cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
-    cosine_similarities = cosine_similarity(X_normalized)
-    print('compute_affinity_matrix ohai 4')
-    # Compute the affinity. Range is [0,1].
-    # Note that this step is not mentioned in the paper!
-    # cosine_similarities = (cosine_similarities + 1.0) / 2.0
-    print('compute_affinity_matrix ohai 5')
+    cosine_similarities = torch.mm(X_normalized, X_normalized.T)
+    cosine_similarities = (cosine_similarities + 1.0) / 2.0
     return cosine_similarities
 
 
@@ -203,9 +204,9 @@ def compute_sorted_eigenvectors(A):
         v: sorted eigenvectors, where v[;, i] corresponds to ith largest
            eigenvalue
     """
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     # Eigen decomposition.
-    A = torch.from_numpy(A).to(device)
+    # A = torch.from_numpy(A).to(device)
     print('compute_sorted_eigenvectors ohai 1')
     # eigenvalues, eigenvectors = np.linalg.eig(A)
     eigenvalues, eigenvectors = torch.linalg.eig(A)
