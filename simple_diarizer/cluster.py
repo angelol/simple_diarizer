@@ -50,11 +50,15 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     Cluster embeds using Spectral Clustering
     """
     if n_clusters is None:
+        print('embeds.shape', embeds.shape)
         S = compute_affinity_matrix(embeds)
         print('S.shape', S.shape)
         if enhance_sim:
             S = sim_enhancement(S)
+        print('after sim_enhancement S.shape', S.shape)
         (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+        print('eigenvalues.shape', eigenvalues.shape)
+        print('eigenvectors.shape', eigenvectors.shape)
         # Get number of clusters.
         n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
         print('detected n_clusters', n_clusters)
