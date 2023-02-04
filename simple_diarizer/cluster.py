@@ -206,24 +206,16 @@ def compute_sorted_eigenvectors(A):
     """
     
     # Eigen decomposition.
-    # A = torch.from_numpy(A).to(device)
-    print('compute_sorted_eigenvectors ohai 1')
-    # eigenvalues, eigenvectors = np.linalg.eig(A)
     eigenvalues, eigenvectors = torch.linalg.eig(A)
-    print('compute_sorted_eigenvectors ohai 2')
-    eigenvalues = eigenvalues.cpu().numpy().real
-    print('compute_sorted_eigenvectors ohai 3')
-    eigenvectors = eigenvectors.cpu().numpy().real
-    print('compute_sorted_eigenvectors ohai 4')
+    eigenvalues = eigenvalues.real
+    eigenvectors = eigenvectors.real
     # Sort from largest to smallest.
-    index_array = np.argsort(-eigenvalues)
-    print('compute_sorted_eigenvectors ohai 5')
+    index_array = torch.argsort(-eigenvalues, dim=0, descending=False)
     # Re-order.
     w = eigenvalues[index_array]
-    print('compute_sorted_eigenvectors ohai 6')
     v = eigenvectors[:, index_array]
-    print('compute_sorted_eigenvectors ohai 7')
     return w, v
+
 
 
 def compute_number_of_clusters(eigenvalues, max_clusters=None, stop_eigenvalue=0.01):
