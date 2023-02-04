@@ -44,27 +44,30 @@ def cluster_AHC(embeds, n_clusters=None, threshold=None, metric="cosine", **kwar
 # https://github.com/wq2012/SpectralCluster
 ##########################################
 
+def compute_n_clusters(embeds):
+    """
+    Compute the number of clusters
+    """
+    print('ohai compute_n_clusters 1')
+    S = compute_affinity_matrix(embeds)
+    print('ohai compute_n_clusters 2')
+    S = sim_enhancement(S)
+    print('ohai compute_n_clusters 3')
+    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+    print('ohai compute_n_clusters 4')
+    n_clusters = compute_number_of_clusters(eigenvalues, 100, 1e-2)
+    print('ohai compute_n_clusters 5')
+    return n_clusters
 
 def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwargs):
     """
     Cluster embeds using Spectral Clustering
     """
-    print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim}')
+    print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim} embeds.shape={embeds.shape}')
     if n_clusters is None:
-        print('embeds.shape', embeds.shape)
-        S = compute_affinity_matrix(embeds)
-        print('S.shape', S.shape)
-        if enhance_sim:
-            S = sim_enhancement(S)
-        print('after sim_enhancement S.shape', S.shape)
-        (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
-        print('eigenvalues.shape', eigenvalues.shape)
-        print('eigenvectors.shape', eigenvectors.shape)
-        # Get number of clusters.
-        n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
-        print('detected n_clusters', n_clusters)
+        n_clusters = compute_n_clusters(embeds)
 
-    print('calling SpectralClustering')
+    print('calling SpectralClustering n_clusters', n_clusters)
     cluster_model = SpectralClustering(
         n_clusters=n_clusters, affinity="nearest_neighbors",
         eigen_solver="lobpcg", assign_labels='cluster_qr'
@@ -185,9 +188,9 @@ def compute_affinity_matrix(X):
     print('compute_affinity_matrix ohai 4')
     # Compute the affinity. Range is [0,1].
     # Note that this step is not mentioned in the paper!
-    affinity = (cosine_similarities + 1.0) / 2.0
+    # cosine_similarities = (cosine_similarities + 1.0) / 2.0
     print('compute_affinity_matrix ohai 5')
-    return affinity
+    return cosine_similarities
 
 
 def compute_sorted_eigenvectors(A):
@@ -200,14 +203,21 @@ def compute_sorted_eigenvectors(A):
            eigenvalue
     """
     # Eigen decomposition.
+    print('compute_sorted_eigenvectors ohai 1')
     eigenvalues, eigenvectors = np.linalg.eig(A)
+    print('compute_sorted_eigenvectors ohai 2')
     eigenvalues = eigenvalues.real
+    print('compute_sorted_eigenvectors ohai 3')
     eigenvectors = eigenvectors.real
+    print('compute_sorted_eigenvectors ohai 4')
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
+    print('compute_sorted_eigenvectors ohai 5')
     # Re-order.
     w = eigenvalues[index_array]
+    print('compute_sorted_eigenvectors ohai 6')
     v = eigenvectors[:, index_array]
+    print('compute_sorted_eigenvectors ohai 7')
     return w, v
 
 
