@@ -6,6 +6,7 @@ from scipy.ndimage import gaussian_filter
 from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans, SpectralClustering
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
+import torch
 
 def similarity_matrix(embeds, metric="cosine"):
     return pairwise_distances(embeds, metric=metric)
@@ -67,7 +68,7 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     if n_clusters is None:
         n_clusters = compute_n_clusters(embeds)
 
-    print('calling SpectralClustering n_clusters', n_clusters)
+    print('calling SpectralClustering n_clusters found: ', n_clusters)
     cluster_model = SpectralClustering(
         n_clusters=n_clusters, affinity="nearest_neighbors",
         eigen_solver="lobpcg", assign_labels='cluster_qr'
@@ -202,13 +203,16 @@ def compute_sorted_eigenvectors(A):
         v: sorted eigenvectors, where v[;, i] corresponds to ith largest
            eigenvalue
     """
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Eigen decomposition.
+    A = torch.from_numpy(A).to(device)
     print('compute_sorted_eigenvectors ohai 1')
-    eigenvalues, eigenvectors = np.linalg.eig(A)
+    # eigenvalues, eigenvectors = np.linalg.eig(A)
+    eigenvalues, eigenvectors = torch.linalg.eig(A)
     print('compute_sorted_eigenvectors ohai 2')
-    eigenvalues = eigenvalues.real
+    eigenvalues = eigenvalues.cpu().numpy().real
     print('compute_sorted_eigenvectors ohai 3')
-    eigenvectors = eigenvectors.real
+    eigenvectors = eigenvectors.cpu().numpy().real
     print('compute_sorted_eigenvectors ohai 4')
     # Sort from largest to smallest.
     index_array = np.argsort(-eigenvalues)
