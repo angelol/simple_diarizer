@@ -174,13 +174,18 @@ def compute_affinity_matrix(X):
         affinity: numpy array of shape (n_samples, n_samples)
     """
     # Normalize the data.
+    print('compute_affinity_matrix ohai 1')
     l2_norms = np.linalg.norm(X, axis=1)
+    print('compute_affinity_matrix ohai 2')
     X_normalized = X / l2_norms[:, None]
+    print('compute_affinity_matrix ohai 3')
     # Compute cosine similarities. Range is [-1,1].
     cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
+    print('compute_affinity_matrix ohai 4')
     # Compute the affinity. Range is [0,1].
     # Note that this step is not mentioned in the paper!
     affinity = (cosine_similarities + 1.0) / 2.0
+    print('compute_affinity_matrix ohai 5')
     return affinity
 
 
