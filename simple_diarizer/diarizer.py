@@ -258,6 +258,7 @@ class Diarizer:
         embeds, segments = self.recording_embeds(signal, fs, speech_ts)
 
         print("Clustering to {} speakers...".format(num_speakers))
+        print("calling self.cluster")
         cluster_labels = self.cluster(
             embeds,
             n_clusters=num_speakers,
