@@ -5,7 +5,7 @@ from scipy.sparse.csgraph import laplacian
 from scipy.ndimage import gaussian_filter
 from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans, SpectralClustering
 from sklearn.metrics import pairwise_distances
-
+from sklearn.metrics.pairwise import cosine_similarity
 
 def similarity_matrix(embeds, metric="cosine"):
     return pairwise_distances(embeds, metric=metric)
@@ -180,7 +180,8 @@ def compute_affinity_matrix(X):
     X_normalized = X / l2_norms[:, None]
     print('compute_affinity_matrix ohai 3')
     # Compute cosine similarities. Range is [-1,1].
-    cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
+    # cosine_similarities = np.matmul(X_normalized, np.transpose(X_normalized))
+    cosine_similarities = cosine_similarity(X_normalized)
     print('compute_affinity_matrix ohai 4')
     # Compute the affinity. Range is [0,1].
     # Note that this step is not mentioned in the paper!
