@@ -223,7 +223,6 @@ class Diarizer:
         embeds, segments = self.recording_embeds(signal, fs)
 
         print("Clustering to {} speakers...".format(num_speakers))
-        print("calling self.cluster")
         cluster_labels = self.cluster(
             embeds,
             n_clusters=num_speakers,
@@ -231,7 +230,6 @@ class Diarizer:
             enhance_sim=enhance_sim,
             period=self.period,
         )
-        print('cluster_labels.shape: ', cluster_labels.shape)
 
         print("Cleaning up output...")
         cleaned_segments = self.join_segments(cluster_labels, segments)

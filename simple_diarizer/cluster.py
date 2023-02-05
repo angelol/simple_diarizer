@@ -53,26 +53,19 @@ def compute_n_clusters(embeds, threshold, period):
     """
     Compute the number of clusters
     """
-    print('ohai compute_n_clusters 1')
     five_minutes = 300
     observation_frames = int(five_minutes / period)
     torch_embeds = torch.from_numpy(embeds[:observation_frames]).to(device)
     S = compute_affinity_matrix(torch_embeds)
-    print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
-    print('ohai compute_n_clusters 3')
     eigenvalues = compute_sorted_eigenvalues(S)
-    print('eigenvalues: ', eigenvalues)
-    print('ohai compute_n_clusters 4')
     n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
-    print('ohai compute_n_clusters 5')
     return n_clusters
 
 def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period=0.5, **kwargs):
     """
     Cluster embeds using Spectral Clustering
     """
-    print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim} embeds.shape={embeds.shape}')
     if n_clusters is None:
         n_clusters = compute_n_clusters(embeds, threshold, period)
 
@@ -81,7 +74,6 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period
         n_clusters=n_clusters, affinity="nearest_neighbors",
         eigen_solver="lobpcg", assign_labels='cluster_qr'
     )
-    print('calling fit_predict embeds.shape', embeds.shape)
     if n_clusters == 1:
         return np.zeros(len(embeds))
     else:
