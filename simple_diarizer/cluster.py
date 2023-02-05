@@ -197,15 +197,19 @@ def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
     Returns:
         number of clusters as an integer
     """
+    if not threshold:
+        threshold = 1e-2
     max_delta = 0
     max_delta_index = 0
     range_end = len(eigenvalues)
     if max_clusters and max_clusters + 1 < range_end:
         range_end = max_clusters + 1
     for i in range(1, range_end):
+        print('eigenvalues[i - 1]: ', eigenvalues[i - 1], ' threshold: ', threshold)
         if eigenvalues[i - 1] < threshold:
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]
+        print(f'i: {i} delta: {delta} max_delta: {max_delta} max_delta_index: {max_delta_index}')
         if delta > max_delta:
             max_delta = delta
             max_delta_index = i
