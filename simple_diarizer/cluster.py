@@ -49,12 +49,14 @@ def cluster_AHC(embeds, n_clusters=None, threshold=None, metric="cosine", **kwar
 # https://github.com/wq2012/SpectralCluster
 ##########################################
 
-def compute_n_clusters(embeds, threshold):
+def compute_n_clusters(embeds, threshold, period):
     """
     Compute the number of clusters
     """
     print('ohai compute_n_clusters 1')
-    torch_embeds = torch.from_numpy(embeds[:600]).to(device)
+    five_minutes = 300
+    observation_frames = int(five_minutes / period)
+    torch_embeds = torch.from_numpy(embeds[:observation_frames]).to(device)
     S = compute_affinity_matrix(torch_embeds)
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
@@ -66,13 +68,13 @@ def compute_n_clusters(embeds, threshold):
     print('ohai compute_n_clusters 5')
     return n_clusters
 
-def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwargs):
+def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period=0.5, **kwargs):
     """
     Cluster embeds using Spectral Clustering
     """
     print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim} embeds.shape={embeds.shape}')
     if n_clusters is None:
-        n_clusters = compute_n_clusters(embeds, threshold)
+        n_clusters = compute_n_clusters(embeds, threshold, period)
 
     print('calling SpectralClustering n_clusters found: ', n_clusters)
     cluster_model = SpectralClustering(

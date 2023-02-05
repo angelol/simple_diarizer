@@ -229,6 +229,7 @@ class Diarizer:
             n_clusters=num_speakers,
             threshold=threshold,
             enhance_sim=enhance_sim,
+            period=self.period,
         )
         print('cluster_labels.shape: ', cluster_labels.shape)
 
