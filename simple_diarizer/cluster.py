@@ -8,6 +8,7 @@ from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
 import torch.nn.functional as F
+import torchvision
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -53,7 +54,7 @@ def compute_n_clusters(embeds, threshold):
     Compute the number of clusters
     """
     print('ohai compute_n_clusters 1')
-    torch_embeds = torch.from_numpy(embeds).to(device)
+    torch_embeds = torch.from_numpy(embeds[:500]).to(device)
     S = compute_affinity_matrix(torch_embeds)
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
@@ -84,8 +85,6 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     
 
 
-import torch
-import torchvision
 
 def diagonal_fill(A):
     """
