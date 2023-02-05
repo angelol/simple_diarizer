@@ -48,7 +48,7 @@ def cluster_AHC(embeds, n_clusters=None, threshold=None, metric="cosine", **kwar
 # https://github.com/wq2012/SpectralCluster
 ##########################################
 
-def compute_n_clusters(embeds):
+def compute_n_clusters(embeds, threshold):
     """
     Compute the number of clusters
     """
@@ -60,7 +60,7 @@ def compute_n_clusters(embeds):
     print('ohai compute_n_clusters 3')
     eigenvalues = compute_sorted_eigenvalues(S)
     print('ohai compute_n_clusters 4')
-    n_clusters = compute_number_of_clusters(eigenvalues, 100, 1e-2)
+    n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
     print('ohai compute_n_clusters 5')
     return n_clusters
 
@@ -70,7 +70,7 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     """
     print(f'cluster_SC n_clusters={n_clusters} threshold={threshold} enhance_sim={enhance_sim} embeds.shape={embeds.shape}')
     if n_clusters is None:
-        n_clusters = compute_n_clusters(embeds)
+        n_clusters = compute_n_clusters(embeds, threshold)
 
     print('calling SpectralClustering n_clusters found: ', n_clusters)
     cluster_model = SpectralClustering(
@@ -187,9 +187,7 @@ def compute_sorted_eigenvalues(A):
 
 
 
-def compute_number_of_clusters(eigenvalues, max_clusters=None, stop_eigenvalue=0.01):
-    if not stop_eigenvalue:
-        stop_eigenvalue = 0.01
+def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
     """Compute number of clusters using EigenGap principle.
     Args:
         eigenvalues: sorted eigenvalues of the affinity matrix
@@ -204,7 +202,7 @@ def compute_number_of_clusters(eigenvalues, max_clusters=None, stop_eigenvalue=0
     if max_clusters and max_clusters + 1 < range_end:
         range_end = max_clusters + 1
     for i in range(1, range_end):
-        if eigenvalues[i - 1] < stop_eigenvalue:
+        if eigenvalues[i - 1] < threshold:
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]
         if delta > max_delta:
