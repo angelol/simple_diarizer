@@ -90,7 +90,6 @@ def diagonal_fill(A):
     """
     Sets the diagonal elements of the matrix to the max of each row
     """
-    A = A.clone()
     diag_idx = torch.arange(0, A.shape[0], out=torch.LongTensor()).to(A.device)
     A[diag_idx, diag_idx] = 0.0
     A[diag_idx, diag_idx] = torch.max(A, dim=1).values
