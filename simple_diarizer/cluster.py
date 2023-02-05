@@ -54,7 +54,7 @@ def compute_n_clusters(embeds, threshold):
     Compute the number of clusters
     """
     print('ohai compute_n_clusters 1')
-    torch_embeds = torch.from_numpy(embeds[:1200]).to(device)
+    torch_embeds = torch.from_numpy(embeds[:600]).to(device)
     S = compute_affinity_matrix(torch_embeds)
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
@@ -80,8 +80,10 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
         eigen_solver="lobpcg", assign_labels='cluster_qr'
     )
     print('calling fit_predict embeds.shape', embeds.shape)
-
-    return cluster_model.fit_predict(embeds)
+    if n_clusters == 1:
+        return np.zeros(len(embeds))
+    else:
+        return cluster_model.fit_predict(embeds)
     
 
 

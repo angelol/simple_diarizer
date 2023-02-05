@@ -230,6 +230,7 @@ class Diarizer:
             threshold=threshold,
             enhance_sim=enhance_sim,
         )
+        print('cluster_labels.shape: ', cluster_labels.shape)
 
         print("Cleaning up output...")
         cleaned_segments = self.join_segments(cluster_labels, segments)
