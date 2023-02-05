@@ -59,6 +59,7 @@ def compute_n_clusters(embeds, threshold):
     S = sim_enhancement(S)
     print('ohai compute_n_clusters 3')
     eigenvalues = compute_sorted_eigenvalues(S)
+    print('eigenvalues: ', eigenvalues)
     print('ohai compute_n_clusters 4')
     n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
     print('ohai compute_n_clusters 5')
