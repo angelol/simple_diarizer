@@ -58,7 +58,7 @@ def compute_n_clusters(embeds):
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
     print('ohai compute_n_clusters 3')
-    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
+    eigenvalues = compute_sorted_eigenvalues(S)
     print('ohai compute_n_clusters 4')
     n_clusters = compute_number_of_clusters(eigenvalues, 100, 1e-2)
     print('ohai compute_n_clusters 5')
@@ -80,33 +80,6 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, **kwar
     print('calling fit_predict embeds.shape', embeds.shape)
 
     return cluster_model.fit_predict(embeds)
-
-def cluster_KMEANS(embeds, n_clusters=None, threshold=None, enhance_sim=True, **kwargs):
-    """
-    Cluster embeds using K-Means
-    """
-    if n_clusters is None:
-        assert threshold, "If num_clusters is not defined, threshold must be defined"
-
-    S = compute_affinity_matrix(embeds)
-    if enhance_sim:
-        S = sim_enhancement(S)
-
-    (eigenvalues, eigenvectors) = compute_sorted_eigenvectors(S)
-
-    # Get spectral embeddings.
-    spectral_embeddings = eigenvectors[:, :n_clusters]
-
-    # Run K-Means++ on spectral embeddings.
-    # Note: The correct way should be using a K-Means implementation
-    # that supports customized distance measure such as cosine distance.
-    # This implemention from scikit-learn does NOT, which is inconsistent
-    # with the paper.
-    kmeans_clusterer = MiniBatchKMeans(
-        n_clusters=n_clusters, init="k-means++", max_iter=300, random_state=0, batch_size=100,
-    )
-    labels = kmeans_clusterer.fit_predict(spectral_embeddings)
-    return labels
     
 
 
@@ -195,7 +168,7 @@ def compute_affinity_matrix(X):
     return cosine_similarities
 
 
-def compute_sorted_eigenvectors(A):
+def compute_sorted_eigenvalues(A):
     """Sort eigenvectors by the real part of eigenvalues.
     Args:
         A: the matrix to perform eigen analysis with shape (M, M)
@@ -206,15 +179,12 @@ def compute_sorted_eigenvectors(A):
     """
     
     # Eigen decomposition.
-    eigenvalues, eigenvectors = torch.linalg.eig(A)
-    eigenvalues = eigenvalues.real
-    eigenvectors = eigenvectors.real
+    eigenvalues = torch.linalg.eigvalsh(A)
     # Sort from largest to smallest.
     index_array = torch.argsort(-eigenvalues, dim=0, descending=False)
     # Re-order.
     w = eigenvalues[index_array]
-    v = eigenvectors[:, index_array]
-    return w, v
+    return w
 
 
 
