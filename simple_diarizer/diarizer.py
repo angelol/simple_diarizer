@@ -33,8 +33,6 @@ class Diarizer:
         if cluster_method == "sc":
             self.cluster = cluster_SC
 
-        self.vad_model, self.get_speech_ts = self.setup_VAD()
-
         self.run_opts = (
             {"device": "cuda"} if torch.cuda.is_available() else {"device": "cpu"}
         )
@@ -55,20 +53,6 @@ class Diarizer:
         self.window = window
         self.period = period
 
-    def setup_VAD(self):
-        model, utils = torch.hub.load(
-            repo_or_dir="snakers4/silero-vad", model="silero_vad"
-        )
-        # force_reload=True)
-
-        get_speech_ts = utils[0]
-        return model, get_speech_ts
-
-    def vad(self, signal):
-        """
-        Runs the VAD model on the signal
-        """
-        return self.get_speech_ts(signal, self.vad_model)
 
     def windowed_embeds(self, signal, fs, window=1.5, period=0.75):
         """
@@ -94,7 +78,7 @@ class Diarizer:
         embeds = []
 
         with torch.no_grad():
-            for i, j in segments:
+            for i, j in tqdm(segments):
                 signal_seg = signal[:, i:j]
                 seg_embed = self.embed_model.encode_batch(signal_seg)
                 embeds.append(seg_embed.squeeze(0).squeeze(0).cpu().numpy())
@@ -102,28 +86,16 @@ class Diarizer:
         embeds = np.array(embeds)
         return embeds, np.array(segments)
 
-    def recording_embeds(self, signal, fs, speech_ts):
+    def recording_embeds(self, signal, fs):
         """
-        Takes signal and VAD output (speech_ts) and produces windowed embeddings
+        Takes signal and produces windowed embeddings
 
         returns: embeddings, segment info
         """
-        all_embeds = []
-        all_segments = []
-
-        for utt in tqdm(speech_ts, desc="Utterances", position=0):
-            start = utt["start"]
-            end = utt["end"]
-
-            utt_signal = signal[:, start:end]
-            utt_embeds, utt_segments = self.windowed_embeds(
-                utt_signal, fs, self.window, self.period
+        all_embeds, all_segments = self.windowed_embeds(
+                signal, fs, self.window, self.period
             )
-            all_embeds.append(utt_embeds)
-            all_segments.append(utt_segments + start)
 
-        all_embeds = np.concatenate(all_embeds, axis=0)
-        all_segments = np.concatenate(all_segments, axis=0)
         return all_embeds, all_segments
 
     @staticmethod
@@ -247,13 +219,8 @@ class Diarizer:
             ), "Couldn't find converted wav file, failed for some reason"
             signal, fs = torchaudio.load(converted_wavfile)
 
-        print("Running VAD...")
-        speech_ts = self.vad(signal[0])
-        print("Splitting by silence found {} utterances".format(len(speech_ts)))
-        assert len(speech_ts) >= 1, "Couldn't find any speech during VAD"
-
         print("Extracting embeddings...")
-        embeds, segments = self.recording_embeds(signal, fs, speech_ts)
+        embeds, segments = self.recording_embeds(signal, fs)
 
         print("Clustering to {} speakers...".format(num_speakers))
         print("calling self.cluster")
