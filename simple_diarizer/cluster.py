@@ -164,7 +164,7 @@ def compute_affinity_matrix(X):
     X_normalized = X / l2_norms[:, None]
     # Compute cosine similarities. Range is [-1,1].
     cosine_similarities = torch.mm(X_normalized, X_normalized.T)
-    cosine_similarities = (cosine_similarities + 1.0) / 2.0
+    # cosine_similarities = (cosine_similarities + 1.0) / 2.0
     return cosine_similarities
 
 
