@@ -54,7 +54,7 @@ def compute_n_clusters(embeds, threshold):
     Compute the number of clusters
     """
     print('ohai compute_n_clusters 1')
-    torch_embeds = torch.from_numpy(embeds[:2400]).to(device)
+    torch_embeds = torch.from_numpy(embeds[:500]).to(device)
     S = compute_affinity_matrix(torch_embeds)
     print('ohai compute_n_clusters 2')
     S = sim_enhancement(S)
