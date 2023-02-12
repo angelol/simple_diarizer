@@ -12,6 +12,7 @@ import torchvision
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+
 def similarity_matrix(embeds, metric="cosine"):
     return pairwise_distances(embeds, metric=metric)
 
@@ -53,14 +54,15 @@ def compute_n_clusters(embeds, threshold, period):
     """
     Compute the number of clusters
     """
-    five_minutes = 300
-    observation_frames = int(five_minutes / period)
-    torch_embeds = torch.from_numpy(embeds[:observation_frames]).to(device)
+    # five_minutes = 300
+    # observation_frames = int(five_minutes / period)
+    torch_embeds = torch.from_numpy(embeds).to(device)
     S = compute_affinity_matrix(torch_embeds)
     S = sim_enhancement(S)
     eigenvalues = compute_sorted_eigenvalues(S)
     n_clusters = compute_number_of_clusters(eigenvalues, 100, threshold)
     return n_clusters
+
 
 def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period=0.5, **kwargs):
     """
@@ -78,8 +80,6 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period
         return np.zeros(len(embeds))
     else:
         return cluster_model.fit_predict(embeds)
-    
-
 
 
 def diagonal_fill(A):
@@ -145,7 +145,6 @@ def sim_enhancement(A):
     return A
 
 
-
 def compute_affinity_matrix(X):
     """Compute the affinity matrix from data.
     Note that the range of affinity is [0,1].
@@ -172,7 +171,7 @@ def compute_sorted_eigenvalues(A):
         v: sorted eigenvectors, where v[;, i] corresponds to ith largest
            eigenvalue
     """
-    
+
     # Eigen decomposition.
     eigenvalues = torch.linalg.eigvalsh(A)
     # Sort from largest to smallest.
@@ -180,7 +179,6 @@ def compute_sorted_eigenvalues(A):
     # Re-order.
     w = eigenvalues[index_array]
     return w
-
 
 
 def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
@@ -200,11 +198,13 @@ def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
     if max_clusters and max_clusters + 1 < range_end:
         range_end = max_clusters + 1
     for i in range(1, range_end):
-        print('eigenvalues[i - 1]: ', eigenvalues[i - 1], ' threshold: ', threshold)
+        print('eigenvalues[i - 1]: ', eigenvalues[i - 1],
+              ' threshold: ', threshold)
         if eigenvalues[i - 1] < threshold:
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]
-        print(f'i: {i} delta: {delta} max_delta: {max_delta} max_delta_index: {max_delta_index}')
+        print(
+            f'i: {i} delta: {delta} max_delta: {max_delta} max_delta_index: {max_delta_index}')
         if delta > max_delta:
             max_delta = delta
             max_delta_index = i
