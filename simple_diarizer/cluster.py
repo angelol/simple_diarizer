@@ -199,9 +199,9 @@ def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
         print(
             f'i={i} eigenvalues[i - 1]: {eigenvalues[i - 1]} threshold: {threshold} max_delta_index: {max_delta_index}')
 
-        if eigenvalues[i - 1] < threshold:
+        if eigenvalues[i] < threshold:
             print(
-                f'breaking at i={i} eigenvalues[i - 1]: {eigenvalues[i - 1]} < threshold: {threshold}')
+                f'breaking at i={i} eigenvalues[i]: {eigenvalues[i]} < threshold: {threshold}')
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]
         print(
