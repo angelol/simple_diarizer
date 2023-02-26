@@ -66,7 +66,8 @@ def cluster_SC(embeds, n_clusters=None, threshold=1e-2, enhance_sim=True, period
     Cluster embeds using Spectral Clustering
     """
     if n_clusters is None:
-        n_clusters = compute_n_clusters(torch.from_numpy(embeds).to(device), threshold, period)
+        n_clusters = compute_n_clusters(
+            torch.from_numpy(embeds).to(device), threshold, period)
 
     print('calling SpectralClustering n_clusters found: ', n_clusters)
     cluster_model = SpectralClustering(
@@ -195,14 +196,18 @@ def compute_number_of_clusters(eigenvalues, max_clusters=None, threshold=1e-2):
     if max_clusters and max_clusters + 1 < range_end:
         range_end = max_clusters + 1
     for i in range(1, range_end):
-        print('eigenvalues[i - 1]: ', eigenvalues[i - 1],
-              ' threshold: ', threshold)
+        print(
+            f'i={i} eigenvalues[i - 1]: {eigenvalues[i - 1]} threshold: {threshold} max_delta_index: {max_delta_index}')
+
         if eigenvalues[i - 1] < threshold:
+            print(
+                f'breaking at i={i} eigenvalues[i - 1]: {eigenvalues[i - 1]} < threshold: {threshold}')
             break
         delta = eigenvalues[i - 1] / eigenvalues[i]
         print(
-            f'i: {i} delta: {delta} max_delta: {max_delta} max_delta_index: {max_delta_index}')
+            f'i={i} delta: {delta} max_delta: {max_delta} max_delta_index: {max_delta_index}')
         if delta > max_delta:
+            print(f'new max_delta: {delta} at i={i} (was {max_delta}')
             max_delta = delta
             max_delta_index = i
     return max_delta_index
